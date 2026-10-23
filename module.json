@@ -1,0 +1,62 @@
+{
+  "id": "importador-fichas-t20",
+  "title": "Importador de Fichas (T20)",
+  "description": "Importa fichas de personagem do Tormenta20 para o Foundry: PDF editável de 2 páginas, ficha Área de RPG (PDF de 4 páginas), planilha Ficha Template (.xlsx) e, para qualquer outro PDF, planilha, docx, txt, md, csv ou json, uma leitura genérica por palavras-chave (Força, Perícias, PV, Classe... e os números ao lado). Casa os nomes com os compêndios do sistema e dos suplementos.",
+  "version": "0.5.2",
+  "authors": [
+    {
+      "name": "ASCUNCAO"
+    }
+  ],
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13"
+  },
+  "relationships": {
+    "systems": [
+      {
+        "id": "tormenta20",
+        "type": "system",
+        "compatibility": {
+          "minimum": "1.5.0"
+        }
+      }
+    ],
+    "recommends": [
+      {
+        "id": "suplementos-de-arton",
+        "type": "module",
+        "reason": "Poderes e itens de Heróis de Arton, Deuses e Atlas."
+      },
+      {
+        "id": "origens-t20",
+        "type": "module",
+        "reason": "Reconhece as origens para adicionar o poder único."
+      },
+      {
+        "id": "t20-sidebar",
+        "type": "module",
+        "reason": "Visual do kit Tormenta20."
+      },
+      {
+        "id": "classes-extras-t20",
+        "type": "module",
+        "reason": "Melhorias de itens superiores (efeitos automáticos) ao importar itens com melhorias."
+      },
+      {
+        "id": "t20-hayd-itens",
+        "type": "module",
+        "reason": "As melhorias, encantos e materiais do nome do item entram pela API dele (a T20 Hayd Loja já lê esse formato)."
+      }
+    ]
+  },
+  "esmodules": [
+    "scripts/main.mjs"
+  ],
+  "styles": [
+    "styles/importador.css"
+  ],
+  "url": "https://github.com/rpgascencion/importador-fichas-t20",
+  "manifest": "https://raw.githubusercontent.com/rpgascencion/importador-fichas-t20/main/module.json",
+  "download": "https://github.com/rpgascencion/importador-fichas-t20/releases/latest/download/importador-fichas-t20.zip"
+}
