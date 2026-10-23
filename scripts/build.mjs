@@ -95,11 +95,24 @@ export async function planImport(F) {
 	}
 	for (const a of F.ataques) {
 		const r = find(index, a.nome, ["arma"]);
-		plan.weapons.push({ ataque: a, entry: r?.entry ?? null });
+		plan.weapons.push({ ataque: a, entry: r?.entry ?? null, melhorias: r?.resto ? r.resto.split(" ").filter(Boolean) : [] });
 	}
-	if (F.armadura && !/^-$/.test(F.armadura)) { const r = find(index, F.armadura, ["equipamento"]); if (r) plan.armor = r.entry; else plan.missing.armor = F.armadura; }
-	if (F.escudo && !/^-$/.test(F.escudo)) { const r = find(index, F.escudo, ["equipamento"]); if (r) plan.shield = r.entry; else plan.missing.shield = F.escudo; }
+	if (F.armadura && !/^-$/.test(F.armadura)) { const r = find(index, F.armadura, ["equipamento"]); if (r) { plan.armor = r.entry; plan.armorMel = r.resto ? r.resto.split(" ").filter(Boolean) : []; } else plan.missing.armor = F.armadura; }
+	if (F.escudo && !/^-$/.test(F.escudo)) { const r = find(index, F.escudo, ["equipamento"]); if (r) { plan.shield = r.entry; plan.shieldMel = r.resto ? r.resto.split(" ").filter(Boolean) : []; } else plan.missing.shield = F.escudo; }
 	return plan;
+}
+
+/** melhorias/material/encantos pelo nome (lista do sistema e do classes-extras-t20, se ativo); o que não existir é ignorado.
+ *  Com o t20-hayd-itens ativo, as melhorias entram depois pela API dele. */
+function aplicarUpgrades(d, w) {
+	const api = apiItens() ? null : game.modules?.get("classes-extras-t20")?.api;
+	if (!(api?.chavePorNome && w?.length && d.system.upgrades)) return;
+	const usados = new Set(); let slot = 1, slotE = 1;
+	for (const t of [...w, ...w.slice(0, -1).map((x, i) => `${x} ${w[i + 1]}`)]) {
+		const r = api.chavePorNome(d, t); if (!r || usados.has(r.chave)) continue;
+		usados.add(r.chave);
+		if (r.campo === "material") d.system.upgrades.material = r.chave; else if (r.campo === "encanto") { if (slotE <= 3) d.system.upgrades[`encanto${slotE++}`] = r.chave; } else if (slot <= 4) d.system.upgrades[`melhoria${slot++}`] = r.chave;
+	}
 }
 
 const clone = async (entry, mut) => {
@@ -172,23 +185,13 @@ export async function applyImport(F, plan, { actor = null } = {}) {
 			d.system.qtd = it.qtd;
 			// itens com efeitos só valem equipados: equipa os que dão bônus (a ficha já conta esses bônus)
 			if (["equipamento", "arma"].includes(d.type) && (d.effects ?? []).some((e) => e.transfer)) d.system.equipado = true;
-			// melhorias/material: usa a lista do sistema (e do classes-extras-t20, se ativo); o que não existir é ignorado
-			// com o t20-hayd-itens ativo, as melhorias entram depois pela API dele (mais abaixo)
-			const api = apiItens() ? null : game.modules?.get("classes-extras-t20")?.api;
-			if (api?.chavePorNome && it.melhorias.length && d.system.upgrades) {
-				const w = it.melhorias, usados = new Set(); let slot = 1, slotE = 1;
-				for (const t of [...w, ...w.slice(0, -1).map((x, i) => `${x} ${w[i + 1]}`)]) {
-					const r = api.chavePorNome(d, t); if (!r || usados.has(r.chave)) continue;
-					usados.add(r.chave);
-					if (r.campo === "material") d.system.upgrades.material = r.chave; else if (r.campo === "encanto") { if (slotE <= 3) d.system.upgrades[`encanto${slotE++}`] = r.chave; } else if (slot <= 4) d.system.upgrades[`melhoria${slot++}`] = r.chave;
-				}
-			}
+			aplicarUpgrades(d, it.melhorias);
 		}));
 	}
-	if (plan.armor && !tem(plan.armor.name, "equipamento")) eq.push(await clone(plan.armor, (d) => { d.system.equipado = true; }));
-	if (plan.shield && !tem(plan.shield.name, "equipamento")) eq.push(await clone(plan.shield, (d) => { d.system.equipado = true; }));
+	if (plan.armor && !tem(plan.armor.name, "equipamento")) eq.push(await clone(plan.armor, (d) => { d.system.equipado = true; aplicarUpgrades(d, plan.armorMel); }));
+	if (plan.shield && !tem(plan.shield.name, "equipamento")) eq.push(await clone(plan.shield, (d) => { d.system.equipado = true; aplicarUpgrades(d, plan.shieldMel); }));
 	for (const w of plan.weapons) {
-		if (w.entry) { if (!tem(w.entry.name, "arma")) eq.push(await clone(w.entry)); }
+		if (w.entry) { if (!tem(w.entry.name, "arma")) eq.push(await clone(w.entry, (d) => aplicarUpgrades(d, w.melhorias))); }
 		else {
 			const a = w.ataque;
 			eq.push({ name: a.nome, type: "arma", img: "systems/tormenta20/icons/itens/armas/espada-curta.webp", system: { description: { value: `<p><strong>Importada da ficha.</strong> Bônus de ataque: ${esc(a.bonus || "-")}. Dano: ${esc(a.dano || "-")}. Crítico: ${esc(a.critico || "-")}. Tipo: ${esc(a.tipo || "-")}. Alcance: ${esc(a.alcance || "-")}.</p>` } } });
@@ -212,14 +215,14 @@ export async function applyImport(F, plan, { actor = null } = {}) {
 	const apiHayd = apiItens();
 	const apiMel = apiHayd ? null : game.modules?.get("classes-extras-t20")?.api;
 	if (apiHayd) {
-		const palavras = new Map(plan.items.filter((i) => i.melhorias.length).map((i) => [i.entry.name, i.melhorias]));
+		const palavras = new Map([...plan.items.map((i) => [i.entry.name, i.melhorias]), ...plan.weapons.filter((x) => x.entry).map((x) => [x.entry.name, x.melhorias]), [plan.armor?.name, plan.armorMel], [plan.shield?.name, plan.shieldMel]].filter(([n, m]) => n && m?.length));
 		for (const doc of docsEq) {
 			const w = palavras.get(doc.name); if (!w || !doc.id) continue;
 			const feitas = await aplicarEntradas(apiHayd, doc, resolverEntradas(apiHayd, doc, w));
 			if (feitas.length) rel.ajustes.push(`${doc.name}: ${feitas.join(", ")} (Itens Superiores)`);
 		}
 	} else if (apiMel?.criarEfeitosMelhorias) for (const doc of docsEq) { try { await apiMel.criarEfeitosMelhorias(doc); } catch (e) { console.warn("Importador de Fichas | melhorias de", doc.name, e); } }
-	else if (plan.items.some((i) => i.melhorias.length)) rel.avisos.push("Melhorias dos itens não aplicadas: ative o módulo t20-hayd-itens (ou o classes-extras-t20).");
+	else if ([...plan.items, ...plan.weapons].some((i) => i.melhorias?.length) || plan.armorMel?.length || plan.shieldMel?.length) rel.avisos.push("Melhorias dos itens não aplicadas: ative o módulo t20-hayd-itens (ou o classes-extras-t20).");
 	await esperarItens(actor, 2000);
 
 	// 4. atributos: o valor da ficha é o total; ajusta a base para o sistema (raça + poderes + itens) chegar nele

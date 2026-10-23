@@ -47,3 +47,6 @@ Com o **T20 Hayd Itens Superiores e Mágicos** ativo, as melhorias, encantos e m
 
 ## v0.5.2
 - Ao importar uma classe do módulo Classes Extras (Cruzado, Sentinela), as habilidades fixas dela até o nível da ficha entram sozinhas (ex.: Cruzado nível 10 recebe Devoto Fiel, Magias, Presente dos Deuses, Alma Guerreira, Fé Inabalável e Oração Marcial). Os "poder de clérigo" continuam vindo da lista de poderes da ficha. Exige classes-extras-t20 0.10.3.
+
+## v0.5.3
+- Melhorias, material e encantos agora também são aplicados às **armas** (campo Ataques), **armadura** e **escudo** da ficha, não só aos itens da lista de equipamento. Ex.: "Machado de batalha Grande de mitral, precisa, harmonizada e veloz".
