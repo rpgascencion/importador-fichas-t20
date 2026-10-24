@@ -2,7 +2,7 @@
   "id": "importador-fichas-t20",
   "title": "Importador de Fichas (T20)",
   "description": "Importa fichas de personagem do Tormenta20 para o Foundry: PDF editável de 2 páginas, ficha Área de RPG (PDF de 4 páginas), planilha Ficha Template (.xlsx) e, para qualquer outro PDF, planilha, docx, txt, md, csv ou json, uma leitura genérica por palavras-chave (Força, Perícias, PV, Classe... e os números ao lado). Casa os nomes com os compêndios do sistema e dos suplementos.",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "authors": [
     {
       "name": "ASCUNCAO"

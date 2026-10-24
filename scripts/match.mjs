@@ -64,8 +64,8 @@ export function find(index, name, types, opts = {}) {
 		if (pref) return { entry: pref, exact: true };
 		return { entry: cands[0], exact: !!iguais.length };
 	}
-	// prefixo: o nome da ficha = nome do compêndio + melhorias ("Ostensório Santificado Harmonizado")
-	for (const v of vs) {
+	// prefixo: o nome da ficha = nome do compêndio + melhorias ("Ostensório Santificado Harmonizado"); só vale para itens, nunca para poderes/magias
+	if (!opts.semResto) for (const v of vs) {
 		let best = null;
 		for (const e of pool) {
 			const b = norm(base(e.name));

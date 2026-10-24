@@ -49,7 +49,7 @@ export async function planImport(F) {
 		const o = findOrigin(index, F.origem);
 		if (o) plan.origin = o; else plan.missing.origin = F.origem;
 	}
-	const opts = { prefer };
+	const opts = { prefer, semResto: true };
 	for (const nomeBruto of F.poderes) {
 		const nome = limpar(nomeBruto);
 		if (!nome || GENERICO.test(nome)) continue;
@@ -81,7 +81,7 @@ export async function planImport(F) {
 	for (const it of F.equipamento) {
 		const nome = limpar(it.nome);
 		const nota = it.nota ?? "";
-		let r = find(index, nome, EQUIP_TYPES, opts);
+		let r = find(index, nome, EQUIP_TYPES, { prefer });
 		if (r && r.entry.type === "poder") r = null;
 		if (r) {
 			const melhorias = r.resto ? r.resto.split(" ").filter(Boolean) : [];   // resolvidas na hora de criar (precisa do módulo classes-extras-t20 para melhorias novas)

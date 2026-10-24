@@ -50,3 +50,6 @@ Com o **T20 Hayd Itens Superiores e Mágicos** ativo, as melhorias, encantos e m
 
 ## v0.5.3
 - Melhorias, material e encantos agora também são aplicados às **armas** (campo Ataques), **armadura** e **escudo** da ficha, não só aos itens da lista de equipamento. Ex.: "Machado de batalha Grande de mitral, precisa, harmonizada e veloz".
+
+## v0.5.4
+- Poderes e magias não casam mais por prefixo do nome (antes "Círculo interno Nós" virava o poder "Círculo Interno" de outra distinção). Se o nome não existir igual nos compêndios, vai para a lista de "faltando". Itens, armas e armaduras continuam aceitando melhorias depois do nome.
