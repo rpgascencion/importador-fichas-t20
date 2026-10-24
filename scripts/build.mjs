@@ -18,6 +18,33 @@ export function titulosNota(nota) {
 }
 const paraHtml = (t) => `<p>${esc(t).replace(/\n+/g, "<br>")}</p>`;
 
+
+/** Tamanho da arma escrito no nome ("Machado de batalha Grande"): passos de dano pelo Livro Básico (cap. 1, Tamanho). */
+const TAMANHOS = { minusculo: ["Minúsculo", -1], minuscula: ["Minúsculo", -1], pequeno: ["Pequeno", 0], pequena: ["Pequeno", 0], grande: ["Grande", 1], enorme: ["Enorme", 1], colossal: ["Colossal", 2] };
+function tamanhoDe(texto) {
+	for (const w of norm(limpar(texto)).split(" ")) if (TAMANHOS[w]) return TAMANHOS[w];
+	return null;
+}
+/** Aplica o tamanho na arma clonada: muda o dado de dano pelos passos e anota a regra do ataque (depende de quem empunha). */
+function aplicarTamanho(d, tam) {
+	if (!tam) return;
+	const [nome, passos] = tam;
+	const dano = (d.system?.rolls ?? []).find((r) => r.type === "dano");
+	const dado = dano?.parts?.[0]?.[0];
+	let msg = `Tamanho da arma na ficha: ${nome}.`;
+	if (passos && dado && CONFIG.T20?.passosDano) {
+		const m = String(dado).match(/(\d+)\s*d\s*(\d+)/i);
+		const linha = m && CONFIG.T20.passosDano.find((l) => l.includes(`${m[1]}d${m[2]}`));
+		if (linha) {
+			const i = linha.indexOf(`${m[1]}d${m[2]}`), novo = linha[Math.max(0, Math.min(i + passos, linha.length - 1))];
+			dano.parts[0][0] = String(dado).replace(m[0], novo);
+			msg += ` Dano ${m[0]} → ${novo} (${passos > 0 ? "+" : ""}${passos} passo${Math.abs(passos) > 1 ? "s" : ""}).`;
+		}
+	} else if (!passos) msg += " Sem alteração de dano (só armas Minúsculas, Grandes, Enormes e Colossais mudam).";
+	msg += " Se for de uma categoria acima da de quem empunha: –5 nos ataques (–2 com Empunhadura Poderosa) e ocupa +1 espaço; uma abaixo: –5 e –1 espaço.";
+	d.system.description = { ...(d.system.description ?? {}), value: `<p><strong>${esc(msg)}</strong></p>${d.system.description?.value ?? ""}` };
+}
+
 /** Casa os nomes da ficha com os compêndios. Não altera nada: só produz o plano. */
 export async function planImport(F) {
 	const index = await loadIndex();
@@ -104,7 +131,7 @@ export async function planImport(F) {
 		if (r && r.entry.type === "poder") r = null;
 		if (r) {
 			const melhorias = r.resto ? r.resto.split(" ").filter(Boolean) : [];   // resolvidas na hora de criar (precisa do módulo classes-extras-t20 para melhorias novas)
-			const novo = { nome: it.nome, qtd: it.qtd, entry: r.entry, melhorias };
+			const novo = { nome: it.nome, qtd: it.qtd, entry: r.entry, melhorias, tamanho: r.entry.type === "arma" ? tamanhoDe(r.resto ?? "") : null };
 			plan.items.push(novo);
 			anterior = ["arma", "equipamento"].includes(r.entry.type) ? novo : null;
 			continue;
@@ -118,7 +145,7 @@ export async function planImport(F) {
 	}
 	for (const a of F.ataques) {
 		const r = find(index, a.nome, ["arma"]);
-		plan.weapons.push({ ataque: a, entry: r?.entry ?? null, melhorias: r?.resto ? r.resto.split(" ").filter(Boolean) : [] });
+		plan.weapons.push({ ataque: a, entry: r?.entry ?? null, melhorias: r?.resto ? r.resto.split(" ").filter(Boolean) : [], tamanho: tamanhoDe(a.nome) });
 	}
 	if (F.armadura && !/^-$/.test(F.armadura)) { const r = find(index, F.armadura, ["equipamento"]); if (r) { plan.armor = r.entry; plan.armorMel = r.resto ? r.resto.split(" ").filter(Boolean) : []; } else plan.missing.armor = F.armadura; }
 	if (F.escudo && !/^-$/.test(F.escudo)) {
@@ -143,7 +170,7 @@ export async function planImport(F) {
 	for (const w of plan.weapons) {
 		if (!w.entry) continue;
 		const i = plan.items.findIndex((x) => x.entry.uuid === w.entry.uuid);
-		if (i >= 0) { junta(w.melhorias, plan.items[i].melhorias); plan.items.splice(i, 1); }
+		if (i >= 0) { junta(w.melhorias, plan.items[i].melhorias); w.tamanho ??= plan.items[i].tamanho; plan.items.splice(i, 1); }
 	}
 	for (const [campo, mel] of [["armor", "armorMel"], ["shield", "shieldMel"]]) {
 		if (!plan[campo]) continue;
@@ -246,13 +273,13 @@ export async function applyImport(F, plan, { actor = null } = {}) {
 			d.system.qtd = it.qtd;
 			// itens com efeitos só valem equipados: equipa os que dão bônus (a ficha já conta esses bônus)
 			if (["equipamento", "arma"].includes(d.type) && (d.effects ?? []).some((e) => e.transfer)) d.system.equipado = true;
-			aplicarUpgrades(d, it.melhorias);
+			aplicarUpgrades(d, it.melhorias); aplicarTamanho(d, it.tamanho);
 		}));
 	}
 	if (plan.armor && !tem(plan.armor.name, "equipamento")) eq.push(await clone(plan.armor, (d) => { d.system.equipado = true; aplicarUpgrades(d, plan.armorMel); }));
 	if (plan.shield && !tem(plan.shield.name, "equipamento")) eq.push(await clone(plan.shield, (d) => { d.system.equipado = true; aplicarUpgrades(d, plan.shieldMel); }));
 	for (const w of plan.weapons) {
-		if (w.entry) { if (!tem(w.entry.name, "arma")) eq.push(await clone(w.entry, (d) => aplicarUpgrades(d, w.melhorias))); }
+		if (w.entry) { if (!tem(w.entry.name, "arma")) eq.push(await clone(w.entry, (d) => { aplicarUpgrades(d, w.melhorias); aplicarTamanho(d, w.tamanho); })); }
 		else {
 			const a = w.ataque;
 			eq.push({ name: a.nome, type: "arma", img: "systems/tormenta20/icons/itens/armas/espada-curta.webp", system: { description: { value: `<p><strong>Importada da ficha.</strong> Bônus de ataque: ${esc(a.bonus || "-")}. Dano: ${esc(a.dano || "-")}. Crítico: ${esc(a.critico || "-")}. Tipo: ${esc(a.tipo || "-")}. Alcance: ${esc(a.alcance || "-")}.</p>` } } });

@@ -90,3 +90,6 @@ Com o **T20 Hayd Itens Superiores e Mágicos** ativo, as melhorias, encantos e m
 
 ## v0.6.7
 - Itens com nome curto (ex.: "Sela inscrita") passam a ser reconhecidos com as melhorias; antes a melhoria "vazava" para o item anterior.
+
+## v0.6.8
+- Tamanho da arma no nome ("Machado de batalha Grande"): Minúsculo –1 passo de dano, Grande e Enorme +1, Colossal +2 (Livro Básico, cap. 1); Pequeno não muda. A penalidade de ataque (–5, ou –2 com Empunhadura Poderosa) e o espaço ficam anotados na descrição da arma, pois dependem de quem empunha.
