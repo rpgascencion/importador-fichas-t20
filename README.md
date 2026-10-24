@@ -84,3 +84,6 @@ Com o **T20 Hayd Itens Superiores e Mágicos** ativo, as melhorias, encantos e m
 - Ficha de 2 páginas: lê "lvl6 - Punição Divina", "Defeitos de idade (Teimoso)", "Saque rápido (Origem)", linhas quebradas e separadores; poderes que antes eram ignorados agora entram.
 - Linhas só com melhorias logo após a arma/armadura ("Preciso", "Harmonizado. VELOZ.") entram no item anterior.
 - Arma/armadura/escudo que aparecem no equipamento e nos campos de ataque/armadura não duplicam mais.
+
+## v0.6.6
+- Escudo escrito só com uma melhoria que não vale para escudos (ex.: "Vigilante", que é de esotérico): não cria mais um Escudo Leve sem nada; avisa na prévia.

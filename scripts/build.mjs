@@ -128,7 +128,13 @@ export async function planImport(F) {
 		if (r) { plan.shield = r.entry; plan.shieldMel = r.resto ? r.resto.split(" ").filter(Boolean) : []; if (nomeEscudo !== F.escudo) plan.avisos.push(`Escudo "${F.escudo}" na ficha: usei Escudo Leve.`); }
 		else {
 			const leve = find(index, "Escudo Leve", ["equipamento"]);
-			if (leve && !/^escudo\b/i.test(limpar(F.escudo))) { plan.shield = leve.entry; plan.shieldMel = norm(limpar(F.escudo)).split(" ").filter(Boolean); plan.avisos.push(`Escudo "${F.escudo}" na ficha: não achei o item, usei Escudo Leve com "${limpar(F.escudo)}" como melhoria.`); }
+			if (leve && !/^escudo\b/i.test(limpar(F.escudo))) {
+				// só melhorias ("Vigilante"): vira Escudo Leve com elas, se alguma valer para escudos (ex.: Vigilante é de esotérico, não de escudo)
+				const palavras = norm(limpar(F.escudo)).split(" ").filter(Boolean);
+				const api = apiItens(); const docLeve = api ? await foundry.utils.fromUuid(leve.entry.uuid) : null;
+				if (api && docLeve && !resolverEntradas(api, docLeve, palavras).length) plan.avisos.push(`Escudo "${F.escudo}" na ficha: não é um escudo nem uma melhoria que valha para escudos; nenhum escudo foi criado (confira a ficha).`);
+				else { plan.shield = leve.entry; plan.shieldMel = palavras; plan.avisos.push(`Escudo "${F.escudo}" na ficha: não achei o item, usei Escudo Leve com "${limpar(F.escudo)}" como melhoria.`); }
+			}
 			else plan.missing.shield = F.escudo;
 		}
 	}
