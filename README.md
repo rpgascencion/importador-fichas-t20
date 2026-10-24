@@ -70,3 +70,6 @@ Com o **T20 Hayd Itens Superiores e Mágicos** ativo, as melhorias, encantos e m
 ## v0.6.1
 - Poderes com escolha no nome ("Círculo externo Mudança", "Círculo interno Nós") voltam a casar com o poder-base (Círculo Externo/Interno) quando o nome-base tem 2+ palavras; a escolha fica anotada na descrição do poder ("Escolha na ficha: Mudança"). "Presente" sozinho nunca casa por prefixo.
 - Mesmo nome em vários lugares (ex.: "Punição Divina" do Clérigo e da distinção Sumo-Sacerdote): prefere o da classe da ficha e, na dúvida, o que não é de distinção.
+
+## v0.6.2
+- Tabelas de nível do **Místico**, **Samurai** e **Miragem** (Dragão Brasil 199): as habilidades fixas dessas classes entram sozinhas na importação. A tabela do Miragem está na versão atual da revista e pode mudar com a atualização.

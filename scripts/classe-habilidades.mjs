@@ -865,5 +865,8 @@ export const HABILIDADES_CLASSE = {
    "Solo Santificado",
    20
   ]
- ]
+ ],
+	"mistico": [["Afinidade", 1], ["Ataque Elemental", 1], ["Magias", 1], ["Língua Primordial", 2], ["Tradição Oral", 3], ["Sexto Sentido", 4], ["Comunhão Suprema", 20]],
+	"samurai": [["Arma Ancestral", 1], ["Código do Samurai", 1], ["Grito de Kiai", 1], ["Olhar Assustador", 3], ["Arma Espiritual", 10], ["Shogun", 20]],
+	"miragem": [["Dança da Areia", 1], ["Movimento Furtivo", 1], ["Investida Acrobática", 3], ["Cortina de Poeira", 5], ["Guerrilheiro das Dunas", 7], ["Mergulho Terrestre", 9], ["Mestre do Deserto", 20]]
 };

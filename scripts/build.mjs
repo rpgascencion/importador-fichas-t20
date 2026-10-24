@@ -44,7 +44,8 @@ export async function planImport(F) {
 		for (const [nomeHab, nivelHab] of HABILIDADES_CLASSE[norm(c.entry.name)] ?? []) {   // classes do livro básico
 			if (nivelHab > c.nivel) continue;
 			const alvo = index.find((e) => e.type === "poder" && e.n === norm(nomeHab) && norm(e.subtipo) === norm(c.entry.name));   // mesmo nome e mesma classe
-			const h = alvo ? { entry: alvo } : find(index, nomeHab, POWER_TYPES, { semResto: true });
+			const semClasse = alvo ? null : index.find((e) => e.type === "poder" && e.n === norm(nomeHab) && !e.subtipo && e.pack !== "world");   // ex.: "Magias" do Místico
+			const h = alvo ? { entry: alvo } : semClasse ? { entry: semClasse } : find(index, nomeHab, POWER_TYPES, { semResto: true });
 			if (h && !plan.classPowers.some((x) => x.uuid === h.entry.uuid)) plan.classPowers.push(h.entry);
 		}
 		for (const e of index) {
