@@ -53,3 +53,6 @@ Com o **T20 Hayd Itens Superiores e Mágicos** ativo, as melhorias, encantos e m
 
 ## v0.5.4
 - Poderes e magias não casam mais por prefixo do nome (antes "Círculo interno Nós" virava o poder "Círculo Interno" de outra distinção). Se o nome não existir igual nos compêndios, vai para a lista de "faltando". Itens, armas e armaduras continuam aceitando melhorias depois do nome.
+
+## v0.5.5
+- Escudo: se a ficha traz só "Escudo", importa como Escudo Leve; se traz só melhorias (ex.: "Vigilante"), usa Escudo Leve com essa melhoria e avisa no relatório. Armadura: "Armadura de pedra reforçada" = item Armadura de Pedra + melhoria reforçada (já funcionava se o item existir no compêndio).

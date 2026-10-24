@@ -98,7 +98,17 @@ export async function planImport(F) {
 		plan.weapons.push({ ataque: a, entry: r?.entry ?? null, melhorias: r?.resto ? r.resto.split(" ").filter(Boolean) : [] });
 	}
 	if (F.armadura && !/^-$/.test(F.armadura)) { const r = find(index, F.armadura, ["equipamento"]); if (r) { plan.armor = r.entry; plan.armorMel = r.resto ? r.resto.split(" ").filter(Boolean) : []; } else plan.missing.armor = F.armadura; }
-	if (F.escudo && !/^-$/.test(F.escudo)) { const r = find(index, F.escudo, ["equipamento"]); if (r) { plan.shield = r.entry; plan.shieldMel = r.resto ? r.resto.split(" ").filter(Boolean) : []; } else plan.missing.shield = F.escudo; }
+	if (F.escudo && !/^-$/.test(F.escudo)) {
+		// só "Escudo" = escudo leve; só melhorias ("Vigilante") = escudo leve com essas melhorias
+		const nomeEscudo = /^escudo$/i.test(limpar(F.escudo).trim()) ? "Escudo Leve" : F.escudo;
+		let r = find(index, nomeEscudo, ["equipamento"]);
+		if (r) { plan.shield = r.entry; plan.shieldMel = r.resto ? r.resto.split(" ").filter(Boolean) : []; if (nomeEscudo !== F.escudo) plan.avisos.push(`Escudo "${F.escudo}" na ficha: usei Escudo Leve.`); }
+		else {
+			const leve = find(index, "Escudo Leve", ["equipamento"]);
+			if (leve && !/^escudo\b/i.test(limpar(F.escudo))) { plan.shield = leve.entry; plan.shieldMel = norm(limpar(F.escudo)).split(" ").filter(Boolean); plan.avisos.push(`Escudo "${F.escudo}" na ficha: não achei o item, usei Escudo Leve com "${limpar(F.escudo)}" como melhoria.`); }
+			else plan.missing.shield = F.escudo;
+		}
+	}
 	return plan;
 }
 
