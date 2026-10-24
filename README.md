@@ -73,3 +73,6 @@ Com o **T20 Hayd Itens Superiores e Mágicos** ativo, as melhorias, encantos e m
 
 ## v0.6.2
 - Tabelas de nível do **Místico**, **Samurai** e **Miragem** (Dragão Brasil 199): as habilidades fixas dessas classes entram sozinhas na importação. A tabela do Miragem está na versão atual da revista e pode mudar com a atualização.
+
+## v0.6.3
+- Miragem atualizado para a versão da Dragão Brasil 211 (agora variante de Caçador): Dança da Areia e Rastreador (1º), Explorador (3º), Cortina de Poeira (7º), Passo do Deserto (9º) e Mestre do Deserto (20º). O caminho do explorador continua sendo escolha do jogador.
