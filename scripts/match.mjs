@@ -75,7 +75,7 @@ export function find(index, name, types, opts = {}) {
 		let best = null;
 		for (const e of pool) {
 			const b = norm(base(e.name));
-			if (!b || b.split(" ").length < 1 || b.length < 5) continue;
+			if (!b || b.split(" ").length < 1 || b.length < 4) continue;
 			if (opts.semResto && b.split(" ").length < 2) continue;      // poderes: só prefixo com 2+ palavras ("Círculo interno Nós" -> Círculo Interno), nunca "Presente"
 			if (v.startsWith(b + " ") && (!best || b.length > best.b.length)) best = { e, b };
 		}

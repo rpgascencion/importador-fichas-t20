@@ -87,3 +87,6 @@ Com o **T20 Hayd Itens Superiores e Mágicos** ativo, as melhorias, encantos e m
 
 ## v0.6.6
 - Escudo escrito só com uma melhoria que não vale para escudos (ex.: "Vigilante", que é de esotérico): não cria mais um Escudo Leve sem nada; avisa na prévia.
+
+## v0.6.7
+- Itens com nome curto (ex.: "Sela inscrita") passam a ser reconhecidos com as melhorias; antes a melhoria "vazava" para o item anterior.
