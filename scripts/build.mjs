@@ -50,8 +50,13 @@ export async function planImport(F) {
 		if (o) plan.origin = o; else plan.missing.origin = F.origem;
 	}
 	const opts = { prefer, semResto: true };
+	// poderes que evoluem com o nível aparecem repetidos na ficha ("Presente dos Deuses (2 melhorias)", "Palavras Afiadas (4d6)"):
+	// contam uma vez só. Parênteses com escolha ("Aumento de Atributo (Força)", "Foco em Magia (Bola de Fogo)") continuam contando.
+	const EVOLUCAO = /\(\s*(?:\d+\s*(?:melhorias?|encantos?|d\d+)|[\d\sa-zºª,+]*\b(?:melhorias?|encantos?)\b|\d+d\d+|\d+º?\s*n[ií]vel|n[ií]vel\s*\d+)[^)]*\)/i;
+	const baseEvol = new Set();
 	for (const nomeBruto of F.poderes) {
 		const nome = limpar(nomeBruto);
+		if (EVOLUCAO.test(nome)) { const k = norm(nome.replace(EVOLUCAO, " ")); if (baseEvol.has(k)) continue; baseEvol.add(k); }
 		if (!nome || GENERICO.test(nome)) continue;
 		const cam = nome.match(/^caminho do arcanista\s*\(([^)]*)\)/i);
 		if (cam) {
@@ -61,7 +66,7 @@ export async function planImport(F) {
 			if (tipo) { const p = find(index, `Caminho do Arcanista: ${tipo[0].toUpperCase() + tipo.slice(1)}`, POWER_TYPES); if (p && !plan.paths.some((x) => x.uuid === p.entry.uuid)) plan.paths.push(p.entry); }
 			continue;
 		}
-		let r = find(index, nome, POWER_TYPES, opts);
+		let r = find(index, EVOLUCAO.test(nome) ? nome.replace(EVOLUCAO, " ").replace(/\s+/g, " ").trim() : nome, POWER_TYPES, opts);
 		if (r) { plan.powers.push({ nome, entry: r.entry, exact: r.exact, fonte: F.fontePoder?.[nomeBruto] ?? "" }); continue; }
 		const sp = find(index, nome, ["magia"], opts);        // a ficha PDF mistura poderes e magias na mesma caixa
 		if (sp) { plan.spells.push({ nome, entry: sp.entry, exact: sp.exact }); continue; }
@@ -70,6 +75,9 @@ export async function planImport(F) {
 		if (par) { plan.genericPowers.push({ nome, texto: par.texto, fonte: F.fontePoder?.[nomeBruto] ?? "" }); plan.missing.powers.push(nome); continue; }
 		plan.missing.powers.push(nome);
 	}
+	// habilidades fixas de classe já entram sozinhas: tira da lista da ficha as que apontam para o mesmo poder
+	const fixos = new Set(plan.classPowers.map((e) => e.uuid));
+	plan.powers = plan.powers.filter((p) => !fixos.has(p.entry.uuid));
 	const seenS = new Set(plan.spells.map((s) => norm(s.nome)));
 	for (const nome of F.magias) {
 		const k = norm(limpar(nome)); if (!k || seenS.has(k)) continue; seenS.add(k);

@@ -56,3 +56,7 @@ Com o **T20 Hayd Itens Superiores e Mágicos** ativo, as melhorias, encantos e m
 
 ## v0.5.5
 - Escudo: se a ficha traz só "Escudo", importa como Escudo Leve; se traz só melhorias (ex.: "Vigilante"), usa Escudo Leve com essa melhoria e avisa no relatório. Armadura: "Armadura de pedra reforçada" = item Armadura de Pedra + melhoria reforçada (já funcionava se o item existir no compêndio).
+
+## v0.5.6
+- Poderes que evoluem com o nível e aparecem repetidos na ficha ("Presente dos Deuses (1 melhoria)", "(2 melhorias)"…, "Palavras Afiadas (2d6)", "(4d6)") agora entram uma vez só. Poderes com escolha entre parênteses (Aumento de Atributo (Força), Foco em Magia (…)) continuam contando cada um.
+- Habilidades fixas de classe que o importador já adiciona sozinho (Cruzado, Sentinela, Comandante) não são duplicadas pela lista da ficha.
