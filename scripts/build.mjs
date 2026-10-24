@@ -1,4 +1,5 @@
 import { norm, SKILLS } from "./ficha.mjs";
+import { HABILIDADES_CLASSE } from "./classe-habilidades.mjs";
 import { apiItens, resolverEntradas, aplicarEntradas } from "./itens.mjs";
 import { loadIndex, find, findOrigin, findPartner, limpar, CLASS_ALIAS } from "./match.mjs";
 
@@ -40,6 +41,12 @@ export async function planImport(F) {
 	// habilidades fixas da classe (módulo classes-extras-t20): poderes marcados com a classe e o nível em que são recebidos
 	plan.classPowers = [];
 	for (const c of plan.classes) {
+		for (const [nomeHab, nivelHab] of HABILIDADES_CLASSE[norm(c.entry.name)] ?? []) {   // classes do livro básico
+			if (nivelHab > c.nivel) continue;
+			const alvo = index.find((e) => e.type === "poder" && e.n === norm(nomeHab) && norm(e.subtipo) === norm(c.entry.name));   // mesmo nome e mesma classe
+			const h = alvo ? { entry: alvo } : find(index, nomeHab, POWER_TYPES, { semResto: true });
+			if (h && !plan.classPowers.some((x) => x.uuid === h.entry.uuid)) plan.classPowers.push(h.entry);
+		}
 		for (const e of index) {
 			const f = e.flags?.["classes-extras-t20"];
 			if (e.type === "poder" && f?.classe && norm(f.classe) === norm(c.entry.name) && Number(f.nivel) <= c.nivel && !plan.classPowers.some((x) => x.uuid === e.uuid)) plan.classPowers.push(e);
@@ -171,6 +178,7 @@ export async function applyImport(F, plan, { actor = null } = {}) {
 		cls.push(await clone(c.entry, (d) => { d.system.niveis = c.nivel; if (ini) d.system.inicial = true; }));
 	}
 	await criar(actor, cls.filter(Boolean), opts, rel);
+	if (cls.length) await esperarItens(actor, 3000);   // o sistema pode conceder poderes ao criar a classe
 
 	// 2. caminhos, poder único da origem, poderes (conta repetições: Conhecimento Mágico x3 etc.)
 	const itens = [];

@@ -5,17 +5,19 @@ const prio = (pack) => (pack.startsWith("tormenta20.") ? 0 : pack.startsWith("su
 let _index = null;
 
 /** Indexa todos os compêndios de Item do sistema Tormenta20 e dos módulos instalados. */
+/** Itens do mundo (poderes próprios) também valem, como no importador de monstros do sistema; lidos a cada importação. */
+const doMundo = () => (game.items?.contents ?? (Array.isArray(game.items) ? game.items : [])).map((it) => ({ name: it.name, n: norm(it.name), type: it.type, uuid: it.uuid, pack: "world", flags: it.flags ?? {}, subtipo: it.system?.subtipo ?? "" }));
 export async function loadIndex(force = false) {
-	if (_index && !force) return _index;
+	if (_index && !force) return [..._index, ...doMundo()];
 	const list = [];
 	for (const pack of game.packs) {
 		if (pack.documentName !== "Item") continue;
-		const idx = await pack.getIndex({ fields: ["type", "flags"] });
-		for (const e of idx) list.push({ name: e.name, n: norm(e.name), type: e.type, uuid: e.uuid, pack: pack.collection, flags: e.flags ?? {} });
+		const idx = await pack.getIndex({ fields: ["type", "flags", "system.subtipo"] });
+		for (const e of idx) list.push({ name: e.name, n: norm(e.name), type: e.type, uuid: e.uuid, pack: pack.collection, flags: e.flags ?? {}, subtipo: e.system?.subtipo ?? "" });
 	}
 	list.sort((a, b) => prio(a.pack) - prio(b.pack));
 	_index = list;
-	return list;
+	return [...list, ...doMundo()];
 }
 
 const ATTR_FULL = { for: "Força", des: "Destreza", con: "Constituição", int: "Inteligência", sab: "Sabedoria", car: "Carisma" };

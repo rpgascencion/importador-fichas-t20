@@ -60,3 +60,9 @@ Com o **T20 Hayd Itens Superiores e Mágicos** ativo, as melhorias, encantos e m
 ## v0.5.6
 - Poderes que evoluem com o nível e aparecem repetidos na ficha ("Presente dos Deuses (1 melhoria)", "(2 melhorias)"…, "Palavras Afiadas (2d6)", "(4d6)") agora entram uma vez só. Poderes com escolha entre parênteses (Aumento de Atributo (Força), Foco em Magia (…)) continuam contando cada um.
 - Habilidades fixas de classe que o importador já adiciona sozinho (Cruzado, Sentinela, Comandante) não são duplicadas pela lista da ficha.
+
+## v0.6.0
+- **Habilidades fixas de todas as classes:** ao importar uma classe, o importador adiciona sozinho as habilidades fixas dela até o nível da ficha. Cobre as 14 classes do Livro Básico, as 15 classes variantes do Heróis de Arton (Treinador, Alquimista, Atleta, Burguês, Duelista, Ermitão, Inovador, Machado de Pedra, Magimarcialista, Necromante, Santo, Seteiro, Usurpador, Vassalo, Ventanista), o Frade (Deuses de Arton) e as do módulo Classes Extras (Cruzado, Sentinela, Comandante). O poder é escolhido pelo nome **e pela classe**, então "Esquiva Sagaz" do Bucaneiro e do Duelista não se confundem.
+- Não entram (escolha do jogador ou sem poder equivalente): poderes de classe, caminhos, Escola de Duelo, Lorde, Dádiva da Fé, Bênção da Justiça, Sorte de Nimb, entre outros. Samurai, Místico e Miragem ainda não têm tabela de nível.
+- Itens do mundo (poderes que você criou) também são encontrados pelo nome, como no importador de monstros do sistema.
+- Espera o sistema terminar de conceder poderes ao criar a classe, para não duplicar.
