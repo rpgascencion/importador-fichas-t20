@@ -74,7 +74,7 @@ export async function planImport(F) {
 			continue;
 		}
 		let r = find(index, EVOLUCAO.test(nome) ? nome.replace(EVOLUCAO, " ").replace(/\s+/g, " ").trim() : nome, POWER_TYPES, opts);
-		if (r) { plan.powers.push({ nome, entry: r.entry, exact: r.exact, fonte: F.fontePoder?.[nomeBruto] ?? "" }); continue; }
+		if (r) { plan.powers.push({ nome, entry: r.entry, exact: r.exact, fonte: F.fontePoder?.[nomeBruto] ?? "", escolha: r.resto ? nome.slice(-r.resto.length).trim() : "" }); continue; }
 		const sp = find(index, nome, ["magia"], opts);        // a ficha PDF mistura poderes e magias na mesma caixa
 		if (sp) { plan.spells.push({ nome, entry: sp.entry, exact: sp.exact }); continue; }
 		// nomes dos parágrafos da nota da célula, se houver
@@ -183,7 +183,7 @@ export async function applyImport(F, plan, { actor = null } = {}) {
 	// 2. caminhos, poder único da origem, poderes (conta repetições: Conhecimento Mágico x3 etc.)
 	const itens = [];
 	const falta = new Map();                       // "tipo|nome" -> quantas cópias a ficha pede
-	const pedir = (entry, n = 1, fonte = "") => { const k = `${entry.type}|${entry.name}`; const v = falta.get(k) ?? { entry, n: 0, fonte: "" }; v.n += n; if (fonte && !v.fonte) v.fonte = fonte; falta.set(k, v); };
+	const pedir = (entry, n = 1, fonte = "", escolha = "") => { const k = `${entry.type}|${entry.name}`; const v = falta.get(k) ?? { entry, n: 0, fonte: "", escolhas: [] }; v.n += n; if (fonte && !v.fonte) v.fonte = fonte; v.escolhas.push(escolha); falta.set(k, v); };
 	for (const p of plan.paths) pedir(p);
 	if (plan.origin) {
 		const o = plan.origin.flags?.["origens-t20"]?.origin ?? plan.origin.flags?.["criador-t20"]?.origin;
@@ -192,12 +192,12 @@ export async function applyImport(F, plan, { actor = null } = {}) {
 		rel.avisos.push(`Origem ${F.origem}: só o poder único foi adicionado. Confira os demais benefícios na ficha.`);
 	}
 	for (const e of plan.classPowers ?? []) pedir(e, 1, "Classe");
-	for (const p of plan.powers) pedir(p.entry, 1, p.fonte);
+	for (const p of plan.powers) pedir(p.entry, 1, p.fonte, p.escolha);
 	for (const s of plan.spells) pedir(s.entry);
-	const marcaFonte = (fonte) => (d) => { if (fonte) d.system.description = { ...(d.system.description ?? {}), value: `<p><strong>Fonte na ficha:</strong> ${esc(fonte)}</p>${d.system.description?.value ?? ""}` }; };
-	for (const { entry, n, fonte } of falta.values()) {
+	const marcaFonte = (fonte, escolha = "") => (d) => { if (fonte || escolha) d.system.description = { ...(d.system.description ?? {}), value: `${fonte ? `<p><strong>Fonte na ficha:</strong> ${esc(fonte)}</p>` : ""}${escolha ? `<p><strong>Escolha na ficha:</strong> ${esc(escolha)}</p>` : ""}${d.system.description?.value ?? ""}` }; };
+	for (const { entry, n, fonte, escolhas } of falta.values()) {
 		const faltantes = n - contar(actor, entry.name, entry.type);
-		for (let i = 0; i < faltantes; i++) itens.push(await clone(entry, marcaFonte(fonte)));
+		for (let i = 0; i < faltantes; i++) itens.push(await clone(entry, marcaFonte(fonte, escolhas[escolhas.length - faltantes + i] ?? "")));
 	}
 	await criar(actor, itens.filter(Boolean), opts, rel);
 

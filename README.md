@@ -66,3 +66,7 @@ Com o **T20 Hayd Itens Superiores e Mágicos** ativo, as melhorias, encantos e m
 - Não entram (escolha do jogador ou sem poder equivalente): poderes de classe, caminhos, Escola de Duelo, Lorde, Dádiva da Fé, Bênção da Justiça, Sorte de Nimb, entre outros. Samurai, Místico e Miragem ainda não têm tabela de nível.
 - Itens do mundo (poderes que você criou) também são encontrados pelo nome, como no importador de monstros do sistema.
 - Espera o sistema terminar de conceder poderes ao criar a classe, para não duplicar.
+
+## v0.6.1
+- Poderes com escolha no nome ("Círculo externo Mudança", "Círculo interno Nós") voltam a casar com o poder-base (Círculo Externo/Interno) quando o nome-base tem 2+ palavras; a escolha fica anotada na descrição do poder ("Escolha na ficha: Mudança"). "Presente" sozinho nunca casa por prefixo.
+- Mesmo nome em vários lugares (ex.: "Punição Divina" do Clérigo e da distinção Sumo-Sacerdote): prefere o da classe da ficha e, na dúvida, o que não é de distinção.

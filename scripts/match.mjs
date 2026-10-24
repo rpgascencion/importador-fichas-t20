@@ -62,16 +62,21 @@ export function find(index, name, types, opts = {}) {
 		const variantes = pool.filter((e) => e.n !== v && norm(base(e.name)) === v);
 		const cands = [...iguais, ...variantes];
 		if (!cands.length) continue;
+		// mesmo nome em mais de um lugar ("Punição Divina" do Clérigo e da distinção Sumo-Sacerdote): prefere a da classe da ficha e, na dúvida, a que não é distinção
+		const ehDist = (e) => /distinc/.test(e.pack) ? 1 : 0, daClasse = (e) => (e.subtipo && prefer.includes(norm(e.subtipo))) ? 0 : 1;
+		iguais.sort((a, b) => daClasse(a) - daClasse(b) || ehDist(a) - ehDist(b));
+		cands.sort((a, b) => (iguais.includes(b) ? 1 : 0) - (iguais.includes(a) ? 1 : 0) || daClasse(a) - daClasse(b) || ehDist(a) - ehDist(b));
 		const pref = variantes.find((e) => prefer.some((p) => norm(qualif(e.name)).includes(p)));
 		if (pref) return { entry: pref, exact: true };
 		return { entry: cands[0], exact: !!iguais.length };
 	}
 	// prefixo: o nome da ficha = nome do compêndio + melhorias ("Ostensório Santificado Harmonizado"); só vale para itens, nunca para poderes/magias
-	if (!opts.semResto) for (const v of vs) {
+	for (const v of vs) {
 		let best = null;
 		for (const e of pool) {
 			const b = norm(base(e.name));
 			if (!b || b.split(" ").length < 1 || b.length < 5) continue;
+			if (opts.semResto && b.split(" ").length < 2) continue;      // poderes: só prefixo com 2+ palavras ("Círculo interno Nós" -> Círculo Interno), nunca "Presente"
 			if (v.startsWith(b + " ") && (!best || b.length > best.b.length)) best = { e, b };
 		}
 		if (best) return { entry: best.e, exact: false, resto: v.slice(best.b.length).trim() };
