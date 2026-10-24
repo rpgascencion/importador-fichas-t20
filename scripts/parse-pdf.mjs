@@ -29,6 +29,49 @@ export async function lerCampos(bytes, PDFLib) {
 
 export const ehFichaAntiga = (campos) => "NOME DO PERSONAGEM" in campos || ("CLASSE" in campos && "RAÇA" in campos && "ORIGEM" in campos);
 
+
+/** Divide por vírgula só fora de parênteses. */
+function virgulasFora(t) {
+	const out = []; let d = 0, cur = "";
+	for (const ch of t) {
+		if (ch === "(") d++; else if (ch === ")") d = Math.max(0, d - 1);
+		if (ch === "," && d === 0) { out.push(cur); cur = ""; } else cur += ch;
+	}
+	out.push(cur); return out;
+}
+const FONTES = { "defeitos de idade": "Defeito de idade", "defeito de idade": "Defeito de idade", "defeitos gerais": "Defeito geral", "defeito geral": "Defeito geral", "defeitos geral": "Defeito geral", "defeitos de classe": "Defeito de classe", "defeito de classe": "Defeito de classe" };
+const ATR_BONUS = /^(for[cç]a|destreza|constitui[cç][aã]o|intelig[eê]ncia|sabedoria|carisma)\s*[+\-–−]\s*\d+$/i;
+/**
+ * Caixas de poderes da ficha de 2 páginas são texto livre: "lvl6 - Punição Divina", "Defeitos de idade (Teimoso)",
+ * "Saque rápido (Origem)", linhas quebradas ("presente dos" / "deuses (3 melhorias)"), separadores "====Racial====".
+ * Devolve só os nomes dos poderes e de onde vêm.
+ */
+export function listaPoderesFicha(textos) {
+	const linhas = [];
+	for (const raw of textos) for (const l of String(raw ?? "").split(/[\r\n]+/).map((x) => x.trim().replace(/^[-•·]\s+/, "")).filter(Boolean)) {
+		const p = linhas[linhas.length - 1];
+		if (p && /\b(de|do|da|dos|das|e|com|em)$/i.test(p) && !/^=+/.test(l)) linhas[linhas.length - 1] = `${p} ${l}`; else linhas.push(l);
+	}
+	const lista = [], fonte = {};
+	for (let l of linhas) {
+		if (/^=+/.test(l) || /=+$/.test(l)) continue;
+		l = l.replace(/^lv(?:l|\.)?\s*\d+\s*[-–:]\s*/i, "").replace(/^\(\s*(?=[^)]*(?:,|$))/, (m) => (l.split("(").length > l.split(")").length ? "" : m));
+		for (let n of virgulasFora(l)) {
+			n = n.trim().replace(/[.,;]+$/, "").trim(); if (!n) continue;
+			if (/^origem\s*:/i.test(n) || /^um poder geral/i.test(n) || ATR_BONUS.test(n)) continue;
+			let src = "";
+			const d = n.match(/^(defeitos?(?:\s+(?:de idade|gerais?|de classe))?)\s*\(\s*(.+)\)$/i);
+			if (d) { src = FONTES[d[1].toLowerCase()] ?? "Defeito"; for (const x of virgulasFora(d[2])) { const nm = x.trim(); if (nm) { lista.push(nm); fonte[nm] = src; } } continue; }
+			const sf = n.match(/^(.*?)\s*\(\s*(origem|classe|ra[cç]a|devo[cç][aã]o|defeito geral|defeito de idade|defeito de classe)\s*\)$/i);
+			if (sf) { n = sf[1].trim(); src = FONTES[sf[2].toLowerCase()] ?? (sf[2][0].toUpperCase() + sf[2].slice(1).toLowerCase()); }
+			if (!n) continue;
+			lista.push(n); if (src) fonte[n] = src;
+		}
+	}
+	return { lista, fonte };
+}
+const semSeparador = (arr) => arr.filter((x) => !/^=+/.test(x) && !/=+$/.test(x));
+
 function parsePdfAntigo(campos) {
 	const g = (n) => { const v = campos[n]; return v == null ? "" : String(v).trim(); };
 	const F = emptyFicha(); F.formato = "pdf";
@@ -67,9 +110,10 @@ function parsePdfAntigo(campos) {
 	F.defesa = num(g("CA"), null);
 	F.proficiencias = g("Proficiências");
 	F.dinheiro = g("T") === "" ? null : num(g("T"), null);
-	F.poderes = [...splitList(g("HabRaçasOrigem")), ...splitList(g("HabClassePoderes")), ...splitList(g("Habilidades & Magias 1")), ...splitList(g("Habilidades & Magias 2"))];
-	F.magias = splitList(g("Magias"));
-	F.equipamento = splitList(g("Equipamento")).map((nome) => ({ nome, qtd: 1 }));
+	const lp = listaPoderesFicha([g("HabRaçasOrigem"), g("HabClassePoderes"), g("Habilidades & Magias 1"), g("Habilidades & Magias 2")]);
+	F.poderes = lp.lista; F.fontePoder = lp.fonte;
+	F.magias = semSeparador(splitList(g("Magias")));
+	F.equipamento = semSeparador(splitList(g("Equipamento"))).map((nome) => ({ nome, qtd: 1 }));
 	F.notas = [g("Anotações"), g("Descrição")].filter(Boolean).join("\n\n");
 	return F;
 }

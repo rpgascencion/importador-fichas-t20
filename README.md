@@ -79,3 +79,8 @@ Com o **T20 Hayd Itens Superiores e Mágicos** ativo, as melhorias, encantos e m
 
 ## v0.6.4
 - Quando a mesma classe/poder existe no módulo Classes Extras e nos suplementos (ex.: Miragem da DB 211 e a versão antiga), o importador usa o do Classes Extras, sem duplicar poderes. Exige classes-extras-t20 0.11.0 para o Miragem atualizado.
+
+## v0.6.5
+- Ficha de 2 páginas: lê "lvl6 - Punição Divina", "Defeitos de idade (Teimoso)", "Saque rápido (Origem)", linhas quebradas e separadores; poderes que antes eram ignorados agora entram.
+- Linhas só com melhorias logo após a arma/armadura ("Preciso", "Harmonizado. VELOZ.") entram no item anterior.
+- Arma/armadura/escudo que aparecem no equipamento e nos campos de ataque/armadura não duplicam mais.

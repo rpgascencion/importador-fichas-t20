@@ -96,6 +96,7 @@ export async function planImport(F) {
 		const pa = findPartner(index, limpar(nome));                        // "Servo Cavalo de guerra" listado entre as magias
 		if (pa) plan.partners.push({ nome: limpar(nome), entry: pa.entry, nivel: pa.nivel, nota: "" }); else plan.missing.spells.push(limpar(nome));
 	}
+	let anterior = null;   // último item de combate/proteção casado: linhas só com melhorias logo depois ("Preciso", "Harmonizado. VELOZ.") pertencem a ele
 	for (const it of F.equipamento) {
 		const nome = limpar(it.nome);
 		const nota = it.nota ?? "";
@@ -103,11 +104,15 @@ export async function planImport(F) {
 		if (r && r.entry.type === "poder") r = null;
 		if (r) {
 			const melhorias = r.resto ? r.resto.split(" ").filter(Boolean) : [];   // resolvidas na hora de criar (precisa do módulo classes-extras-t20 para melhorias novas)
-			plan.items.push({ nome: it.nome, qtd: it.qtd, entry: r.entry, melhorias });
+			const novo = { nome: it.nome, qtd: it.qtd, entry: r.entry, melhorias };
+			plan.items.push(novo);
+			anterior = ["arma", "equipamento"].includes(r.entry.type) ? novo : null;
 			continue;
 		}
 		const pa = findPartner(index, nome);
-		if (pa) { plan.partners.push({ nome, entry: pa.entry, nivel: pa.nivel, nota }); continue; }
+		if (pa) { plan.partners.push({ nome, entry: pa.entry, nivel: pa.nivel, nota }); anterior = null; continue; }
+		if (anterior && await soMelhorias(anterior, nome)) { anterior.melhorias.push(...norm(nome).split(" ").filter(Boolean)); continue; }
+		anterior = null;
 		plan.generic.push({ nome, qtd: it.qtd, nota });
 		plan.missing.items.push({ nome, qtd: it.qtd, generico: true });
 	}
@@ -127,7 +132,28 @@ export async function planImport(F) {
 			else plan.missing.shield = F.escudo;
 		}
 	}
+	// o mesmo item pode estar na lista de equipamento e nos campos de ataque/armadura/escudo: fica uma cópia só (juntando as melhorias)
+	const junta = (alvo, extra) => { for (const m of extra ?? []) if (!alvo.includes(m)) alvo.push(m); };
+	for (const w of plan.weapons) {
+		if (!w.entry) continue;
+		const i = plan.items.findIndex((x) => x.entry.uuid === w.entry.uuid);
+		if (i >= 0) { junta(w.melhorias, plan.items[i].melhorias); plan.items.splice(i, 1); }
+	}
+	for (const [campo, mel] of [["armor", "armorMel"], ["shield", "shieldMel"]]) {
+		if (!plan[campo]) continue;
+		const i = plan.items.findIndex((x) => x.entry.uuid === plan[campo].uuid);
+		if (i >= 0) { plan[mel] ??= []; junta(plan[mel], plan.items[i].melhorias); plan.items.splice(i, 1); }
+	}
 	return plan;
+}
+
+/** A linha da ficha é só melhorias/encantos/materiais do item anterior? (precisa do t20-hayd-itens) */
+async function soMelhorias(anterior, nome) {
+	const api = apiItens(); if (!api) return false;
+	const doc = await foundry.utils.fromUuid(anterior.entry.uuid); if (!doc) return false;
+	const palavras = norm(nome).split(" ").filter(Boolean);
+	if (!palavras.length || palavras.length > 5) return false;
+	return resolverEntradas(api, doc, [nome]).length > 0;
 }
 
 /** melhorias/material/encantos pelo nome (lista do sistema e do classes-extras-t20, se ativo); o que não existir é ignorado.
