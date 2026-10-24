@@ -63,9 +63,9 @@ export function find(index, name, types, opts = {}) {
 		const cands = [...iguais, ...variantes];
 		if (!cands.length) continue;
 		// mesmo nome em mais de um lugar ("Punição Divina" do Clérigo e da distinção Sumo-Sacerdote): prefere a da classe da ficha e, na dúvida, a que não é distinção
-		const ehDist = (e) => /distinc/.test(e.pack) ? 1 : 0, daClasse = (e) => (e.subtipo && prefer.includes(norm(e.subtipo))) ? 0 : 1;
-		iguais.sort((a, b) => daClasse(a) - daClasse(b) || ehDist(a) - ehDist(b));
-		cands.sort((a, b) => (iguais.includes(b) ? 1 : 0) - (iguais.includes(a) ? 1 : 0) || daClasse(a) - daClasse(b) || ehDist(a) - ehDist(b));
+		const ehExtra = (e) => /^classes-extras-t20\./.test(e.pack) ? 0 : 1, ehDist = (e) => /distinc/.test(e.pack) ? 1 : 0, daClasse = (e) => (e.subtipo && prefer.includes(norm(e.subtipo))) ? 0 : 1;
+		iguais.sort((a, b) => ehExtra(a) - ehExtra(b) || daClasse(a) - daClasse(b) || ehDist(a) - ehDist(b));
+		cands.sort((a, b) => (iguais.includes(b) ? 1 : 0) - (iguais.includes(a) ? 1 : 0) || ehExtra(a) - ehExtra(b) || daClasse(a) - daClasse(b) || ehDist(a) - ehDist(b));
 		const pref = variantes.find((e) => prefer.some((p) => norm(qualif(e.name)).includes(p)));
 		if (pref) return { entry: pref, exact: true };
 		return { entry: cands[0], exact: !!iguais.length };

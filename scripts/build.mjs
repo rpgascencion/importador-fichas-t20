@@ -41,16 +41,18 @@ export async function planImport(F) {
 	// habilidades fixas da classe (módulo classes-extras-t20): poderes marcados com a classe e o nível em que são recebidos
 	plan.classPowers = [];
 	for (const c of plan.classes) {
-		for (const [nomeHab, nivelHab] of HABILIDADES_CLASSE[norm(c.entry.name)] ?? []) {   // classes do livro básico
-			if (nivelHab > c.nivel) continue;
+		// 1) poderes marcados pelo classes-extras-t20 com a classe e o nível (têm prioridade: são os mantidos à mão)
+		for (const e of index) {
+			const f = e.flags?.["classes-extras-t20"];
+			if (e.type === "poder" && f?.classe && norm(f.classe) === norm(c.entry.name) && Number(f.nivel) <= c.nivel && !plan.classPowers.some((x) => x.uuid === e.uuid)) plan.classPowers.push(e);
+		}
+		// 2) tabela de habilidades das classes dos livros (mesmo nome e mesma classe); nome já coberto pelo passo 1 não repete
+		for (const [nomeHab, nivelHab] of HABILIDADES_CLASSE[norm(c.entry.name)] ?? []) {
+			if (nivelHab > c.nivel || plan.classPowers.some((x) => x.n === norm(nomeHab) && (!x.subtipo || norm(x.subtipo) === norm(c.entry.name)))) continue;
 			const alvo = index.find((e) => e.type === "poder" && e.n === norm(nomeHab) && norm(e.subtipo) === norm(c.entry.name));   // mesmo nome e mesma classe
 			const semClasse = alvo ? null : index.find((e) => e.type === "poder" && e.n === norm(nomeHab) && !e.subtipo && e.pack !== "world");   // ex.: "Magias" do Místico
 			const h = alvo ? { entry: alvo } : semClasse ? { entry: semClasse } : find(index, nomeHab, POWER_TYPES, { semResto: true });
 			if (h && !plan.classPowers.some((x) => x.uuid === h.entry.uuid)) plan.classPowers.push(h.entry);
-		}
-		for (const e of index) {
-			const f = e.flags?.["classes-extras-t20"];
-			if (e.type === "poder" && f?.classe && norm(f.classe) === norm(c.entry.name) && Number(f.nivel) <= c.nivel && !plan.classPowers.some((x) => x.uuid === e.uuid)) plan.classPowers.push(e);
 		}
 	}
 	if (F.origem && !/^-$/.test(F.origem)) {

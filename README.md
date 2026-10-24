@@ -76,3 +76,6 @@ Com o **T20 Hayd Itens Superiores e Mágicos** ativo, as melhorias, encantos e m
 
 ## v0.6.3
 - Miragem atualizado para a versão da Dragão Brasil 211 (agora variante de Caçador): Dança da Areia e Rastreador (1º), Explorador (3º), Cortina de Poeira (7º), Passo do Deserto (9º) e Mestre do Deserto (20º). O caminho do explorador continua sendo escolha do jogador.
+
+## v0.6.4
+- Quando a mesma classe/poder existe no módulo Classes Extras e nos suplementos (ex.: Miragem da DB 211 e a versão antiga), o importador usa o do Classes Extras, sem duplicar poderes. Exige classes-extras-t20 0.11.0 para o Miragem atualizado.
